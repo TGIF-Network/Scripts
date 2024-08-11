@@ -1,4 +1,4 @@
-Wg#!/bin/bash
+#!/bin/bash
 ############################################################
 #  This script will automate the process of                #
 #  Installing the Nextion Driver 			   #

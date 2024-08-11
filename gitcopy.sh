@@ -12,6 +12,7 @@
 # Use screen model from command $1
 # Valid Screen Names for EA7KDO - NX3224K024, NX4832K935
 declare -i tst
+ver=""
 
 if [ -z "$1" ]; then
 	clear
@@ -78,10 +79,12 @@ function getea7kdo
 	tst=0
 #	echo "Function EA7KDO"
 	calltxt="EA7KDO"
-
+        ver="KDO 2.4"
     	if [ "$scn" == "NX3224K024" ]; then
-		cleandirs
-	  	sudo git clone --depth 1 https://github.com/EA7KDO/NX3224K024 "$homedir"/Nextion_Temp
+		cleandirs#
+#	  	sudo git clone --depth 1 https://github.com/EA7KDO/NX3224K024 "$homedir"/Nextion_Temp
+                sudo git clone --depth 1 https://github.com/TGIF-Network/NX3224K024 "$homedir"/Nextion_Temp
+
 		chmod +x "$homedir"/Nextion_Temp/*.sh
 		mkdir /usr/local/etc/Nextion_Support
 		sudo rsync -avqru "$homedir"/Nextion_Temp/* /usr/local/etc/Nextion_Support/ --exclude=NX* 
@@ -94,13 +97,16 @@ tst=1
 	fi     
 	if [ "$scn" == "NX4832K035" ]; then
 		cleandirs
-	  	sudo git clone --depth 1 https://github.com/EA7KDO/NX4832K035 "$homedir"/Nextion_Temp
+		ver="KDO 3.5"
+#	  	sudo git clone --depth 1 https://github.com/EA7KDO/NX4832K035 "$homedir"/Nextion_Temp
+                sudo git clone --depth 1 https://github.com/TGIF-Network/NX4832K035-KDO "$homedir"/Nextion_Temp
+
 		sudo chmod +x "$homedir"/Nextion_Temp/*.sh
 		mkdir /usr/local/etc/Nextion_Support
 		sudo rsync -avqru "$homedir"/Nextion_Temp/* /usr/local/etc/Nextion_Support/ --exclude=NX* 
 		sudo cp "$homedir"/Nextion_Temp/"$model$tft" /usr/local/etc/
 		if [ "$fb" ]; then
-		    	echo "Downloaded new Screen package for $model$tft"
+		    	echo "Downloaded new KDO Screen package for $model$tft"
 			echo "Copied new tft to /usr/local/etc/"	
 		fi
      	fi
@@ -175,7 +181,7 @@ fi
 
 
 # echo "$scn Ready  $execution_time"
-echo "$scn Ready to Flash! $execution_time"
+echo "$ver $scn Ready to Flash! $execution_time"
 
 
 

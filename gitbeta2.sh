@@ -83,7 +83,7 @@ if [ -d "$homedir"/Nextion_Temp ]; then
 fi
 
 	if [ "$scn" == "NX4832K035" ]; then
-	  	sudo git clone --depth 1 https://github.com/VE3ZRD/NX4832K035-KDO "$homedir"/Nextion_Temp
+	  	sudo git clone --depth 1 https://github.com/TGIF-Network/NX4832K035-Beta "$homedir"/Nextion_Temp
 		tst=2
      	fi
 	
@@ -180,7 +180,7 @@ duration=$(echo "$(date +%s.%N) - $start" | bc)
 execution_time=`printf "%.2f seconds" $duration`
 
 
-txt="$calltxt Scripts Loaded: $execution_time"
+txt="Beta $scn Loaded: $execution_time"
 #whiptail --title "$title" --msgbox "$txt" 8 90
 dialog --title "  $title  " --ascii-lines --msgbox "$txt" 8 78
 

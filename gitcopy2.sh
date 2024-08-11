@@ -22,6 +22,7 @@
 #	sudo su
   # 	exit 1
 #fi
+ver=""
 p1=$(pwd) ; cd .. ; homedir=$(pwd) ; cd "$p1"
 
 who=$(whoami)
@@ -84,12 +85,14 @@ if [ -d "$homedir"/Nextion_Temp ]; then
 fi
 
     	if [ "$scn" == "NX3224K024" ]; then
-	  	sudo git clone --depth 1 https://github.com/EA7KDO/NX3224K024 "$homedir"/Nextion_Temp
+	  	sudo git clone --depth 1 https://github.com/TGIF-Network/NX3224K024 "$homedir"/Nextion_Temp
 		tst=1
+		ver="KDO 2.4"
 	fi     
 	if [ "$scn" == "NX4832K035" ]; then
-	  	sudo git clone --depth 1 https://github.com/EA7KDO/NX4832K035 "$homedir"/Nextion_Temp
+	  	sudo git clone --depth 1 https://github.com/TGIF-Network/NX4832K035-KDO "$homedir"/Nextion_Temp
 		tst=2
+		ver="KDO 3.5"
      	fi
 	
 }
@@ -106,10 +109,12 @@ fi
 	calltxt="VE3RD"
 	if [ "$scn" = "NX3224K024" ]; then	
 	 	tst=1  
+		ver=Beta 2.4"
 	  	sudo git clone --depth 1 https://github.com/VE3RD/Nextion "$homedir"/Nextion_Temp
 	elif [ "$scn" == "NX4832K035" ]; then
-	  	sudo git clone --depth 1 https://github.com/VE3RD/NX4832K035 "$homedir"/Nextion_Temp
+	  	sudo git clone --depth 1 https://github.com/VE3RD/NX4832K035-Beta "$homedir"/Nextion_Temp
 		tst=2
+		ver=Beta 3.5"
 	else
 		errtext="Invalid VE3RD Screen Name $scn,  $s1,  $s2"
 		exitcode 
@@ -290,7 +295,8 @@ duration=$(echo "$(date +%s.%N) - $start" | bc)
 execution_time=`printf "%.2f seconds" $duration`
 
 
-txt="$calltxt Scripts Loaded: $execution_time"
+#txt="$calltxt Scripts Loaded: $execution_time"
+txt="$ver $scn Loaded: $execution_time"
 #whiptail --title "$title" --msgbox "$txt" 8 90
 dialog --title "  $title  " --ascii-lines --msgbox "$txt" 8 78
 
