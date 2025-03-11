@@ -234,7 +234,9 @@ function readcustom
 		displayline
 }
 
+
 whiptail --msgbox  "$(cat nss2.info)" --backtitle "Curtesy of VE3RD $ver" --title "NSS.sh Hostfile Editor Instruction Set"   35 145 3>&1 1>&2 2>&3
+
 readmain
 
 
