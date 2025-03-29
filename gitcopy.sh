@@ -30,6 +30,7 @@ fi
 s1="NX3224K024"
 s3="NX4832K035"
 s4="NX8048K070"
+s5="NX8048P070"
 errtext="Error! - Aborting"
 if [ "$2" == "Beta" ]; then
 Beta="$2"
@@ -324,7 +325,7 @@ echo "$errt" > /home/pi-star/gc.log
 #echo "$scn  - $call" 
 if [ "$fb" ]; then
 	        if [ "$scn" != "$s1" -a "$scn" != "$s3" -a "$scn" !- "$s4" ]; then
-              		echo "EA7KDO Screen Name MUST be NX3224K024 or NX4832K035"
+              		echo "EA7KDO Screen Name MUST be NX3224K024 or NX4832K035 or NX8048K070 or NX8048P070"
                        	errtext="Invalid EA7KDO Screen Name"
                         exitcode
 		else
@@ -353,12 +354,17 @@ sleep 1s
 #Stop the cron service
 sudo systemctl stop cron.service  > /dev/null
 
-if [ "$1" == "NX8048K070" ]; then
+#echo "Loading Scripts for $1"
+
+if [ "$1" == "NX8048K070" ] || [ "$1" == "NX8048P070" ]; then
+# echo "Loading NX80 scripts $1"
 	NX80
 else
+ #echo "Loading EA7KDO scripts $1"
+
 	getea7kdo
 fi
-
+#exit
 model="$scn"
 
  FILE=/usr/local/etc/"$model$tft"
