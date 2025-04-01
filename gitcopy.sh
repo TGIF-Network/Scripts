@@ -88,31 +88,60 @@ function cleandirs()
 function NX80()
 {
 #		cleandirs
-		Logit "Loading NX8048K070 Screen and Scripts"
-
-			# First attempt to clone 
- 			Logit "First Attempt to Clone Files Starting" 
-			cleandirs
+if [ "$scn" == "NX8048K070" ]; then
+	Logit "Loading NX8048K070 Screen and Scripts"
     		rm -f -r /home/pi-star/Nextion_Temp
 
 	Logit "Removeing /home/pi-star/Nextion_Temp"
    	sudo git clone --depth 1 https://github.com/TGIF-Network/NX8048K070-KDO-Beta /home/pi-star/Nextion_Temp
 	status="$?"
-
 	if [ "$status" -eq 0 ]; then
 		Logit "Git Clone OK"
 	else
 		Logit "Git Clone Failed"
 		exit
 	fi
-			if [ ! -f /home/pi-star/Nextion_Temp/NX8048K070.tft ]; then
-			   echo "GitCopy Process Failed!"
-			   Logit "GitCopy Process Failed!"
-				exit
-			else
-				Logit "Git Copy Process Found New NX8048K035.tft"
-			fi
-			#Backup Nextion_Temp
+	if [ ! -f /home/pi-star/Nextion_Temp/NX8048K070.tft ]; then
+	   echo "GitCopy Process Failed!"
+	   Logit "GitCopy Process Failed!"
+		exit
+	else
+		Logit "Git Copy Process Found New NX8048K035.tft"
+	fi
+
+
+
+fi
+
+if [ "$scn" == "NX8048P070" ]; then
+	Logit "Loading NX8048P070 Screen and Scripts"
+    		rm -f -r /home/pi-star/Nextion_Temp
+
+	Logit "Removeing /home/pi-star/Nextion_Temp"
+   	sudo git clone --depth 1 https://github.com/TGIF-Network/NX8048P070-KDO-Beta /home/pi-star/Nextion_Temp
+	status="$?"
+	if [ "$status" -eq 0 ]; then
+		Logit "Git Clone OK"
+	else
+		Logit "Git Clone Failed"
+		exit
+	fi
+	if [ ! -f /home/pi-star/Nextion_Temp/NX8048P070.tft ]; then
+	   echo "GitCopy Process Failed!"
+	   Logit "GitCopy Process Failed!"
+		exit
+	else
+		Logit "Git Copy Process Found New NX8048P035.tft"
+	fi
+
+
+
+fi
+
+
+
+	
+	#Backup Nextion_Temp
 			if [ "$fb" ]; then
                         	echo "Downloaded new EA7KDO Beta Screen package for $model$tft"
                         	echo "Copied new tft to /usr/local/etc/"
@@ -173,7 +202,7 @@ function NX80()
 
 }
 
-function getea7kdo
+function NX48()
 {
 	tst=0
 #	echo "Function EA7KDO"
@@ -362,7 +391,7 @@ if [ "$1" == "NX8048K070" ] || [ "$1" == "NX8048P070" ]; then
 else
  #echo "Loading EA7KDO scripts $1"
 
-	getea7kdo
+	NX48
 fi
 #exit
 model="$scn"

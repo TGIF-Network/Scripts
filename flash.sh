@@ -79,8 +79,9 @@ tst=0
 found1=$(sudo sh -c 'echo ls /usr/local/etc/NX*.tft' | cut -d' ' -f2)
 found2=$(sudo sh -c 'echo ls /usr/local/etc/NX*.tft' | cut -d' ' -f3)
 found3=$(sudo sh -c 'echo ls /usr/local/etc/NX*.tft' | cut -d' ' -f4)
+found4=$(sudo sh -c 'echo ls /usr/local/etc/NX*.tft' | cut -d' ' -f5)
 
-if [ "$found3" ]; then
+if [ "$found4" ]; then
 	errtext="Too Many Screen files found in /ust/loca/etc/"
 	echo "Script Aborted"
 	exitcode
@@ -91,6 +92,7 @@ if [ -z "$found1" ]; then
  echo " Script Aborted!"
  exitcode
 fi
+
 if [ ! -f /usr/local/etc/NX*.tft ]; then
     errtext="Screen File not found!"
 	exitcode
@@ -106,11 +108,19 @@ MENU="Select your Screen Type from List Found"
 if [ -z "$found2" ]; then 
 OPTIONS=(1 "Quit"
 	 2 "$found1")
-else
+
+elif [ -z "$found3" ]; then 
 OPTIONS=(1 "Quit"
 	 2 "$found1"
-   	 3 "$found2")
+   	 2 "$found2")
+
+elif [ -z "$found4" ]; then 
+OPTIONS=(1 "Quit"
+	 2 "$found1"
+	 3 "$found2"
+   	 4 "$found3")
 fi
+
 
 CHOICE=$(dialog --clear \
                 --backtitle "$BACKTITLE" \
@@ -123,7 +133,34 @@ CHOICE=$(dialog --clear \
 #clear
 echo -e '\e[1;44m'
 
-if [ "$found2" ]; then
+if [ "$found3" ]; then
+	case $CHOICE in
+        	1)
+            		echo "You Chose to Quit"
+	   		echo "Script Aborted!"
+			tst=0
+			echo="You Selected Quit Option at Level 1"
+			sed -i '/use_colors = /c\use_colors = OFF' ~/.dialogrc
+			tput sgr0 
+			clear
+			exit
+			;;
+        	2)
+			scn="$found1"
+			tst=1
+			;;
+
+		3) 
+			scn="$found2"
+			tst=2
+			;;
+		4) 
+			scn="$found3"
+			tst=2
+			;;
+		esac
+
+elif [ "$found2" ]; then
 	case $CHOICE in
         	1)
             		echo "You Chose to Quit"
