@@ -73,21 +73,17 @@ function exitcode
 
 function cleandirs()
 {
-#if [ -d /home/pi-star/Nextion_Temp ]; then
     sudo rm -f -r /home/pi-star/Nextion_Temp
     Logit "Removed /home/pi-star/Nextion_Temp Directory"
-#fi
-#if [ -f /usr/local/etc/"$model$tft" ]; then
-	sudo rm -f /usr/local/etc/NX*.tft
-    Logit "Remove Existing $model$tft"
-#fi
+    sudo rm -f /usr/local/etc/*.tft
+    Logit "Remove All Existing tft files"
 
 }
 
-# EA7KDO Script Function
+# 7.0" DScreen  Function
 function NX80()
 {
-#		cleandirs
+cleandirs
 if [ "$scn" == "NX8048K070" ]; then
 	Logit "Loading NX8048K070 Screen and Scripts"
     		rm -f -r /home/pi-star/Nextion_Temp
@@ -106,11 +102,8 @@ if [ "$scn" == "NX8048K070" ]; then
 	   Logit "GitCopy Process Failed!"
 		exit
 	else
-		Logit "Git Copy Process Found New NX8048K035.tft"
+		Logit "Git Copy Process Found New NX8048K070.tft"
 	fi
-
-
-
 fi
 
 if [ "$scn" == "NX8048P070" ]; then
@@ -131,7 +124,7 @@ if [ "$scn" == "NX8048P070" ]; then
 	   Logit "GitCopy Process Failed!"
 		exit
 	else
-		Logit "Git Copy Process Found New NX8048P035.tft"
+		Logit "Git Copy Process Found New NX8048P070.tft"
 	fi
 
 
@@ -388,6 +381,11 @@ sudo systemctl stop cron.service  > /dev/null
 if [ "$1" == "NX8048K070" ] || [ "$1" == "NX8048P070" ]; then
 # echo "Loading NX80 scripts $1"
 	NX80
+        sudo /home/pi-star/Scripts/installND127.sh
+	if [ "$fb" ]; then
+	    	echo "Installed NextionDriver Version 1.27"
+	fi
+        
 else
  #echo "Loading EA7KDO scripts $1"
 
