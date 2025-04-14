@@ -20,7 +20,7 @@ fi
 
 # Configuration
 SCN=$(echo "$1" | tr '[:lower:]' '[:upper:]' | cut -c1-10)
-RELEASE=$([ "$2" = "Beta" ] || [ "$2" = "Upgrade" ] && echo "Upgrade" || echo "0")
+RELEASE=$([ "$2" = "Beta" ] || [ "$2" = "Upgrade" ] || [ "$2" = "RD" ]  && echo "Upgrade" || echo "0")
 FEEDBACK=$3
 CALL_TXT="EA7KDO"
 TEMP_DIR="/home/pi-star/Nextion_Temp"
@@ -109,7 +109,7 @@ process_smaller() {
             clone_repo "$repo_base/NX3224K024-KDO" "$SCN"
             ;;
         "NX4832K035")
-            local suffix=$([ "$RELEASE" = "Upgrade" ] && echo "-KDO-Beta" || echo "-KDO")
+            local suffix=$([ "$RELEASE" = "Upgrade" ] && echo "-KDO-Beta" || echo "-KDO-RD" || echo "-KDO")
             clone_repo "$repo_base/NX4832K035$suffix" "$SCN"
             ;;
     esac
