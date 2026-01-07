@@ -48,7 +48,7 @@ echo "$sc1"
 echo "$sc2"
 m1="MNet_Network"
 m2="0000"
-m3="mnet.hopto.org"
+m3="mnetdmr.com"
 m5="62031"
 
 textstr="$m1\t\t$m2\t$m3\t\t\t$m4\t\t$m5"

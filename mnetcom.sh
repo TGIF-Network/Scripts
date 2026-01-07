@@ -11,47 +11,26 @@
 #########################################################################
 export NCURSES_NO_UTF8_ACS=1
 
-s1=""
-s2=""
-s3=""
 
-slen2=$(expr length "$sc2")
+set -euo pipefail
 
-s1=$(grep 10210 /root/P25Hosts.txt | cut -f1)
+FILE="/etc/DMR_Hosts.txt"
+OLD="mnet.hopto.org"
+NEW="mnetdmr.com"
+BACKUP="${FILE}.bak"
 
-s2=$(grep 10211 /root/P25Hosts.txt | cut -f1)
-
-s3=$(grep 10230 /root/P25Hosts.txt | cut -f1)
-
-echo "S1:$s1"
-echo "S2:$s2"
-echo "S3:$s3"
-
-if [ "$s1" == '' ]; then
-	echo "Addding 10210"
-	textstr="10210\tmnetdmr.com\t41000"
-	sudo sed -i "\$a$textstr" /root/P25Hosts.txt
+if [ ! -f "$FILE" ]; then
+  echo "Error: $FILE not found." >&2
+  exit 1
 fi
 
-if [ "$s2" == '' ]; then
-	echo "Addding 10211"
-	textstr="10211\tmnetdmr.com\t41010"
-	sudo sed -i "\$a$textstr" /root/P25Hosts.txt
-fi
-
-echo "Updating Hostfiles..."
-
-sudo /usr/local/sbin/HostFilesUpdate.sh
-
-if [ "$?" == "0" ]; then
-	echo "Host Files Successfully Updated"
+# choose sed -i style that works on both GNU and macOS: create a backup explicitly
+# If file is writable do it directly, otherwise run with sudo.
+if [ -w "$FILE" ]; then
+  sed -i.bak "s/${OLD}/${NEW}/g" "$FILE"
 else
-	echo "Host File Update Failed!"
+  sudo sed -i.bak "s/${OLD}/${NEW}/g" "$FILE"
 fi
-echo ""
 
-
-
-
-
-
+echo "Replaced '$OLD' → '$NEW' in $FILE"
+echo "Backup saved as $BACKUP"
