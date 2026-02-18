@@ -1,150 +1,204 @@
 #!/bin/bash
-#################################################################
-# Nextion Screen Support for 2.4", 3.5", and 7.0" Screens       #
-# Downloads scripts/support files from GitHub                   #
-# Copies to Nextion_Support and NX??? tft to /usr/local/etc     #
-# Returns script duration as completion flag                   #
-# KF6S/VE3RD                               2021-12-21           #
-#################################################################
+#######################################################################
+# gitcopy.sh - Nextion Screen Support Script
+# Downloads EA7KDO / TGIF-Network Nextion files from GitHub
+# Supports: NX3224K024, NX4832K035 (KDO/KDO-Beta/KDO-RD/Original), NX8048K070, NX8048P070
+#
+# New: NX4832K035-Original → loads stable/default https://github.com/TGIF-Network/NX4832K035-KDO
+#
+# Examples:
+#   ./gitcopy.sh NX4832K035 EA7KDO FF          → default -KDO + verbose
+#   ./gitcopy.sh NX4832K035-Original EA7KDO FF → same as above (stable -KDO + verbose)
+#   ./gitcopy.sh NX4832K035-KDO-RD FF          → RD variant + verbose
+#   ./gitcopy.sh NX4832K035 Beta               → -KDO-Beta, silent
+#
+# Fixed & extended 2026
+#######################################################################
 
-# Valid screen models
-VALID_SCREENS=("NX3224K024" "NX4832K035" "NX8048K070" "NX8048P070")
+VALID_BASE_MODELS=("NX3224K024" "NX4832K035" "NX8048K070" "NX8048P070")
 
-# Check for screen name parameter
-if [ -z "$1" ]; then
-    clear
-    echo -e "\nNo Screen Name Provided\n\nValid Screens - EA7KDO: ${VALID_SCREENS[*]}\n"
-    echo "Syntax: $0 NX????K??? [Beta|Upgrade] [feedback]"
-    exit 1
-fi
-
-# Configuration
-SCN=$(echo "$1" | tr '[:lower:]' '[:upper:]' | cut -c1-10)
-RELEASE=$([ "$2" = "Beta" ] || [ "$2" = "Upgrade" ] || [ "$2" = "RD" ]  && echo "Upgrade" || echo "0")
-FEEDBACK=$3
-CALL_TXT="EA7KDO"
 TEMP_DIR="/home/pi-star/Nextion_Temp"
-SUPPORT_DIR="/usr/local/etc/Nextion_Support"
 TFT_DIR="/usr/local/etc"
+SUPPORT_DIR="$TFT_DIR/Nextion_Support"
+LOG_FILE="/home/pi-star/gc.log"
 
-# Logging function
-logit() { echo "$1" &>> /home/pi-star/gc.log; }
+REPO_BASE="https://github.com/TGIF-Network"
 
-# Error exit function
-exit_error() {
-    echo "Script Execution Failed: $SCN - $1"
+log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$LOG_FILE"; }
+
+error_exit() {
+    echo "ERROR: $*" | tee -a "$LOG_FILE" >&2
     exit 1
 }
 
-# Clean directories
 clean_dirs() {
-    sudo rm -rf "$TEMP_DIR" && logit "Removed $TEMP_DIR"
-    sudo rm -f "$TFT_DIR"/*.tft && logit "Removed existing TFT files"
+    sudo rm -rf "$TEMP_DIR" 2>/dev/null && log "Cleaned $TEMP_DIR"
+    sudo rm -f "$TFT_DIR"/*.tft 2>/dev/null && log "Removed old .tft files"
 }
 
-# Check if screen is valid
-is_valid_screen() {
-    for screen in "${VALID_SCREENS[@]}"; do
-        [ "$SCN" = "$screen" ] && return 0
-    done
-    return 1
+usage() {
+    cat <<EOF
+
+Usage: $0 <screen> [EA7KDO|Beta|Upgrade] [FF]
+
+Examples:
+  $0 NX4832K035 EA7KDO FF              → default KDO + verbose
+  $0 NX4832K035-Original EA7KDO FF     → default KDO (stable/original) + verbose
+  $0 NX4832K035 Beta                   → KDO-Beta, silent
+  $0 NX4832K035-KDO-RD FF              → KDO-RD + verbose
+
+Valid base models: ${VALID_BASE_MODELS[*]}
+
+EOF
+    exit 1
 }
 
-# Clone and process repository
-clone_repo() {
-    local repo_url="$1" model="$2"
-    clean_dirs
-    sudo git clone --depth 1 "$repo_url" "$TEMP_DIR" || exit_error "Git clone failed"
-    [ ! -f "$TEMP_DIR/$model.tft" ] && exit_error "TFT file not found"
-    logit "Git clone successful for $model"
-}
-
-# Copy support files
-copy_support_files() {
-    local model="$1"
-    sudo mkdir -p "$SUPPORT_DIR"
-    sudo chmod +x "$TEMP_DIR"/*.sh
-    sudo rsync -qru --exclude='NX*' --exclude='ColorThemes.ini' --exclude='profiles.ini' \
-        --exclude='wifiprofiles.ini' "$TEMP_DIR"/* "$SUPPORT_DIR/"
-    sudo cp "$TEMP_DIR/$model.tft" "$TFT_DIR/"
-    [ "$FEEDBACK" ] && echo -e "Downloaded package for $model.tft\nCopied TFT to $TFT_DIR/"
-}
-
-# Copy config files if needed
-copy_config_files() {
-    local configs=("ColorThemes.ini" "profiles.ini" "wifiprofiles.ini")
-    for config in "${configs[@]}"; do
-        if [ ! -f "/etc/$config" ] && [ -f "$TEMP_DIR/$config" ]; then
-            cp "$TEMP_DIR/$config" /etc/
-            [ "$FEEDBACK" ] && echo "Copied $config to /etc/"
-        elif [ "$FEEDBACK" ]; then
-            echo "$config found in /etc/ - Not copied"
+normalize_screen() {
+    local input=$(echo "$1" | tr '[:lower:]' '[:upper:]' | tr -d '[:space:]')
+    local base="" suffix=""
+    for b in "${VALID_BASE_MODELS[@]}"; do
+        if [[ "$input" == "$b"* ]]; then
+            base="$b"
+            suffix="${input#"$b"}"
+            break
         fi
     done
+    [[ -z "$base" ]] && error_exit "Invalid screen model: $1"
+    echo "$base $suffix"   # Space separated → safer parsing
 }
 
-# Process 7.0" screens
-process_7inch() {
-    local repo_base="https://github.com/TGIF-Network"
-    local repo_suffix="-KDO-Beta"  # Preserving Beta as requested
-    case "$SCN" in
-        "NX8048K070")
-            clone_repo "$repo_base/NX8048K070$repo_suffix" "$SCN"
-            ;;
-        "NX8048P070")
-            clone_repo "$repo_base/NX8048P070$repo_suffix" "$SCN"
-            ;;
-    esac
-    copy_support_files "$SCN"
-    copy_config_files
-    sudo /home/pi-star/Scripts/installND127.sh
-    [ "$FEEDBACK" ] && echo "Installed NextionDriver Version 1.27"
-}
+get_repo_url() {
+    local model="$1"
+    local suffix="$2"
+    local release_flag="$3"
 
-# Process smaller screens
-process_smaller() {
-    local repo_base="https://github.com/TGIF-Network"
-    case "$SCN" in
+    case "$model" in
         "NX3224K024")
-            clone_repo "$repo_base/NX3224K024-KDO" "$SCN"
+            echo "${REPO_BASE}/NX3224K024-KDO"
             ;;
         "NX4832K035")
-            local suffix=$([ "$RELEASE" = "Upgrade" ] && echo "-KDO-Beta" || echo "-KDO-RD" || echo "-KDO")
-            clone_repo "$repo_base/NX4832K035$suffix" "$SCN"
+            suffix_upper=$(echo "$suffix" | tr '[:lower:]' '[:upper:]')
+            if [[ "$suffix_upper" == *"-KDO-RD"* || "$suffix_upper" == *"-RD"* ]]; then
+                echo "${REPO_BASE}/NX4832K035-KDO-RD"
+            elif [[ "$release_flag" == "Upgrade" || "$suffix_upper" == *"-KDO-BETA"* || "$suffix_upper" == *"-BETA"* ]]; then
+                echo "${REPO_BASE}/NX4832K035-KDO-Beta"
+            elif [[ "$suffix_upper" == *"-ORIGINAL"* ]]; then
+                # Explicitly map -Original to stable/default KDO
+                echo "${REPO_BASE}/NX4832K035-KDO"
+            else
+                # Default / stable
+                echo "${REPO_BASE}/NX4832K035-KDO"
+            fi
+            ;;
+        "NX8048K070")
+            echo "${REPO_BASE}/NX8048K070-KDO-Beta"
+            ;;
+        "NX8048P070")
+            echo "${REPO_BASE}/NX8048P070-KDO-Beta"
+            ;;
+        *)
+            error_exit "No repo defined for model: $model"
             ;;
     esac
-    copy_support_files "$SCN"
-    copy_config_files
 }
 
-# Main execution
-main() {
-    echo "$(date)" > /home/pi-star/gc.log
-    [ "$FEEDBACK" ] && ! is_valid_screen && exit_error "Invalid screen name"
+# ────────────────────────────────────────────────
+# Parse arguments
+# ────────────────────────────────────────────────
+[[ -z "$1" ]] && usage
 
-    local start=$(date +%s.%N)
-    [ "$FEEDBACK" ] || exec 2>/dev/null
-    sudo mount -o remount,rw /
-    sleep 1
-    sudo systemctl stop cron.service
+read -r BASE SUFFIX < <(normalize_screen "$1")
 
-    case "$SCN" in
-        NX8048*) process_7inch ;;
-        *) process_smaller ;;
+RELEASE_FLAG=""
+FEEDBACK=""
+
+if [[ -n "$2" ]]; then
+    case "${2^^}" in
+        BETA|UPGRADE)
+            RELEASE_FLAG="Upgrade"
+            ;;
+        *) ;;  # EA7KDO or other → ignored for release
     esac
+fi
 
-    [ ! -f "$TFT_DIR/$SCN.tft" ] && exit_error "Missing TFT file"
-    sudo systemctl start cron.service
+# Feedback if third arg or (second arg present and not beta/upgrade)
+if [[ -n "$3" || ( -n "$2" && "$RELEASE_FLAG" != "Upgrade" ) ]]; then
+    FEEDBACK=1
+fi
+
+TFT_FILE="${BASE}.tft"
+
+log "Starting: ${BASE}${SUFFIX:+-$SUFFIX} | TFT: $TFT_FILE | Release: ${RELEASE_FLAG:-no} | Feedback: ${FEEDBACK:-off}"
+
+# ────────────────────────────────────────────────
+# Main execution
+# ────────────────────────────────────────────────
+main() {
+    local start=$(date +%s.%N)
+
+    echo "$(date '+%Y-%m-%d %H:%M:%S') Started for ${BASE}${SUFFIX:+-$SUFFIX}" > "$LOG_FILE"
+
+    [[ $FEEDBACK ]] || exec 2>/dev/null
+
+    sudo mount -o remount,rw / || error_exit "remount rw failed"
+    sudo systemctl stop cron.service 2>/dev/null
+
+    clean_dirs
+
+    local repo=$(get_repo_url "$BASE" "$SUFFIX" "$RELEASE_FLAG")
+
+    # Safety fallback (should rarely trigger now)
+    if [[ -z "$repo" && "$BASE" == "NX4832K035" ]]; then
+        repo="${REPO_BASE}/NX4832K035-KDO"
+        log "Fallback: forced NX4832K035-KDO"
+    fi
+
+    [[ -z "$repo" ]] && error_exit "Could not determine repo URL"
+
+    log "Cloning: $repo"
+
+    sudo git clone --depth 1 "$repo" "$TEMP_DIR" || error_exit "git clone failed → $repo"
+
+    [[ ! -f "$TEMP_DIR/$TFT_FILE" ]] && error_exit "TFT file missing: $TFT_FILE"
+
+    log "TFT found: $TFT_FILE"
+
+    sudo mkdir -p "$SUPPORT_DIR"
+    sudo chmod +x "$TEMP_DIR"/*.sh 2>/dev/null
+
+    sudo rsync -qru --exclude='*.tft' --exclude='ColorThemes.ini' \
+        --exclude='profiles.ini' --exclude='wifiprofiles.ini' \
+        "$TEMP_DIR/" "$SUPPORT_DIR/" || error_exit "rsync failed"
+
+    sudo cp "$TEMP_DIR/$TFT_FILE" "$TFT_DIR/" || error_exit "copy TFT failed"
+
+    for f in ColorThemes.ini profiles.ini wifiprofiles.ini; do
+        if [[ ! -f "/etc/$f" && -f "$TEMP_DIR/$f" ]]; then
+            sudo cp "$TEMP_DIR/$f" /etc/
+            [[ $FEEDBACK ]] && echo "Copied $f to /etc/"
+        elif [[ $FEEDBACK ]]; then
+            echo "$f already exists in /etc/ – skipped"
+        fi
+    done
+
+    if [[ "$BASE" == NX8048* ]]; then
+        log "Installing NextionDriver v1.27"
+        sudo /home/pi-star/Scripts/installND127.sh 2>/dev/null
+        [[ $FEEDBACK ]] && echo "Installed NextionDriver Version 1.27"
+    fi
+
+    sudo systemctl start cron.service 2>/dev/null
 
     local duration=$(echo "$(date +%s.%N) - $start" | bc)
-    local tag=$(git -C "$TEMP_DIR" tag)
-    printf "%s %s Ready to Flash!\r %.2f secs\n" "$SCN" "$tag" "$duration"
+    local tag=$(git -C "$TEMP_DIR" describe --tags --always 2>/dev/null || echo "unknown")
+
+    [[ $FEEDBACK ]] && {
+        echo "Repo cloned: $repo"
+        echo "Git tag/branch: $tag"
+    }
+
+    printf "%s Ready to Flash!\r %s %.2f secs\n" "${BASE}${SUFFIX:+-${SUFFIX}}" "$tag" "$duration"
 }
 
-# Validate and run
-if ! is_valid_screen; then
-    echo "Screen must be one of: ${VALID_SCREENS[*]}"
-    exit 1
-fi
 main
-
+exit 0
