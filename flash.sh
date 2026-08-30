@@ -44,7 +44,12 @@ function killservices
 }
 function flashscreen
 {
+	if [ -f /usr/local/bin/Nextion/nextion.py ]; then
 			sudo python3 /usr/local/bin/Nextion/nextion.py "$pathstr" /dev/ttyUSB0
+       else
+			sudo python3 /home/pi-star/Scripts/nextion.py "$pathstr" /dev/ttyUSB0
+
+	fi
 			echo "Rebooting ......"
 			sudo reboot
 }
