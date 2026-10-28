@@ -11,6 +11,7 @@
 #   ./gitcopy.sh NX4832K035-Original EA7KDO FF → same as above (stable -KDO + verbose)
 #   ./gitcopy.sh NX4832K035-KDO-RD FF          → RD variant + verbose
 #   ./gitcopy.sh NX4832K035 Beta               → -KDO-Beta, silent
+#   ./gitcopy.sh NX3224K024                   → -VE3RD, silent
 #
 # Fixed & extended 2026
 #######################################################################
@@ -46,6 +47,7 @@ Examples:
   $0 NX4832K035-Original EA7KDO FF     → default KDO (stable/original) + verbose
   $0 NX4832K035 Beta                   → KDO-Beta, silent
   $0 NX4832K035-KDO-RD FF              → KDO-RD + verbose
+  $0 NX3224K024 VE3RD FF               → KDO-RD + verbose
 
 Valid base models: ${VALID_BASE_MODELS[*]}
 
@@ -74,7 +76,7 @@ get_repo_url() {
 
     case "$model" in
         "NX3224K024")
-            echo "${REPO_BASE}/NX3224K024-KDO"
+            echo "${REPO_BASE}/NX3224K024-RD"
             ;;
         "NX4832K035")
             suffix_upper=$(echo "$suffix" | tr '[:lower:]' '[:upper:]')
